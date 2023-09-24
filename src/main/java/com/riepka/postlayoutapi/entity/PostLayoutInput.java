@@ -1,4 +1,4 @@
-package com.riepka.postlayoutapp.entity;
+package com.riepka.postlayoutapi.entity;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

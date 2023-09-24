@@ -1,8 +1,8 @@
-package com.riepka.postlayoutapp.resources;
+package com.riepka.postlayoutapi.resources;
 
-import com.riepka.postlayoutapp.entity.PostLayoutInput;
-import com.riepka.postlayoutapp.entity.PostLayoutOption;
-import com.riepka.postlayoutapp.services.PostLayoutService;
+import com.riepka.postlayoutapi.entity.PostLayoutInput;
+import com.riepka.postlayoutapi.entity.PostLayoutOption;
+import com.riepka.postlayoutapi.services.PostLayoutService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

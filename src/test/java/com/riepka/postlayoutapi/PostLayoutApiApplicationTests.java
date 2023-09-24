@@ -1,10 +1,10 @@
-package com.riepka.postlayoutapp;
+package com.riepka.postlayoutapi;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class PostLayoutAppApplicationTests {
+class PostLayoutApiApplicationTests {
 
 	@Test
 	void contextLoads() {

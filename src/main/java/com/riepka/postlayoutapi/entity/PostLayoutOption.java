@@ -1,4 +1,4 @@
-package com.riepka.postlayoutapp.entity;
+package com.riepka.postlayoutapi.entity;
 
 import java.util.List;
 import lombok.Builder;

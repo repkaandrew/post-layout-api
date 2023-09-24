@@ -1,8 +1,8 @@
-package com.riepka.postlayoutapp.services;
+package com.riepka.postlayoutapi.services;
 
-import com.riepka.postlayoutapp.entity.LayoutPost;
-import com.riepka.postlayoutapp.entity.PostLayoutInput;
-import com.riepka.postlayoutapp.entity.PostLayoutOption;
+import com.riepka.postlayoutapi.entity.LayoutPost;
+import com.riepka.postlayoutapi.entity.PostLayoutInput;
+import com.riepka.postlayoutapi.entity.PostLayoutOption;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
