@@ -13,7 +13,14 @@ public class PostLayoutService {
     return List.of(
         PostLayoutOption.builder()
             .posts(List.of(
+                new LayoutPost(0),
                 new LayoutPost(input.getRunHorLength())
+            ))
+            .build(),
+        PostLayoutOption.builder()
+            .posts(List.of(
+                new LayoutPost(0.25 * input.getRunHorLength()),
+                new LayoutPost(0.75 * input.getRunHorLength())
             ))
             .build()
     );
