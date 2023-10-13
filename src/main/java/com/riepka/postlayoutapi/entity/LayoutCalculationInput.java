@@ -1,5 +1,6 @@
 package com.riepka.postlayoutapi.entity;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.util.List;
@@ -8,7 +9,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class PostLayoutInput {
+public class LayoutCalculationInput {
 
   @Positive
   private final double postSize;
@@ -19,6 +20,7 @@ public class PostLayoutInput {
   @Positive
   private final double runHorLength;
 
+  @Valid
   @NotNull
-  private final List<ObstructionDataInput> obstructions;
+  private final List<ObstructionInput> obstructions;
 }

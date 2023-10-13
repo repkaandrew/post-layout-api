@@ -1,6 +1,6 @@
 package com.riepka.postlayoutapi.resources;
 
-import com.riepka.postlayoutapi.entity.PostLayoutInput;
+import com.riepka.postlayoutapi.entity.LayoutCalculationInput;
 import com.riepka.postlayoutapi.entity.PostLayoutOption;
 import com.riepka.postlayoutapi.services.PostLayoutService;
 import jakarta.validation.Valid;
@@ -21,7 +21,7 @@ public class PostLayoutResource {
   private final PostLayoutService service;
 
   @PostMapping
-  public List<PostLayoutOption> calculateLayout(@RequestBody @Valid PostLayoutInput input) {
+  public List<PostLayoutOption> calculateLayout(@RequestBody @Valid LayoutCalculationInput input) {
     return service.calcPostLayout(input);
   }
 }
