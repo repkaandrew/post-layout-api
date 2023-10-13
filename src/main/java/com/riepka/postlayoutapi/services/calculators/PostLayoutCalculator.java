@@ -39,7 +39,7 @@ public class PostLayoutCalculator {
   }
 
   /**
-   * @return list of found layout options PostLayoutOption(posts)
+   * @return list of found layout prioritized options
    */
   public List<PostLayoutOption> calculate() {
     final var placePostObstructions = obstructions.stream()
@@ -222,7 +222,7 @@ public class PostLayoutCalculator {
           initPostsNumb
       );
 
-      leftSideSolutionOpt.ifPresent(solutions::add);
+      leftSideSolutionOpt.ifPresent(solutions::add);// add to solution if result present
       rightSideSolutionOpt.ifPresent(solutions::add);
     }
 
@@ -353,6 +353,8 @@ public class PostLayoutCalculator {
    * @return layout validity
    */
   private boolean checkIfLayoutPanelsHaveValidLength(List<Double> layout, double sectionLength) {
+    final double maxCenterToCenter = panelMaxLength + postSize;
+
     for (int i = 0; i < layout.size() + 1; i++) {
       final double prevLocation = i == 0
           ? 0
@@ -361,9 +363,9 @@ public class PostLayoutCalculator {
           ? sectionLength
           : layout.get(i);
 
-      final double panelLength = currLocation - prevLocation;
+      final double postCenterToCenter = currLocation - prevLocation;
 
-      if (panelLength > panelMaxLength) {
+      if (postCenterToCenter > maxCenterToCenter) {
         return false;
       }
     }
@@ -455,7 +457,7 @@ public class PostLayoutCalculator {
   }
 
   /**
-   * Creates even layout for given segment length
+   * Creates even layout for given segment length (only inner posts included)
    * @param segmentLength segment length
    * @param extraPosts number of extra posts to add in default layout(based on panel max length)
    * @return posts even layout
@@ -468,7 +470,7 @@ public class PostLayoutCalculator {
       return baseLayout;
     }
 
-    final int numberOfInnerPosts = (int) (segmentLength / maxCenterToCenter) + extraPosts;
+    final int numberOfInnerPosts = (int) (Math.ceil(segmentLength / maxCenterToCenter)) + extraPosts - 1;
     final double defaultCenterToCenter = segmentLength / (numberOfInnerPosts + 1);
 
     for (int i = 0; i < numberOfInnerPosts; i++) {
@@ -643,7 +645,11 @@ public class PostLayoutCalculator {
       }
 
       if (!Objects.equals(options1.evenLayout(), options2.evenLayout())) {
-        return options1.evenLayout() ? -1 : 1;
+        final var extraPostsDiff = options1.extraPosts() - options2.extraPosts();
+
+        return options1.evenLayout() && extraPostsDiff <= 1
+            ? -1
+            : 1;
       }
 
       if (!Objects.equals(options1.extraPosts(), options2.extraPosts())) {
