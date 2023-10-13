@@ -434,8 +434,7 @@ public class PostLayoutCalculator {
 
     final int maxPermittedFalling = (int) Math.ceil((double) postsNumber / 10);
 
-    return onlyTryToAvoid
-        && maxPermittedFalling <= intersectedObstructions.size();
+    return onlyTryToAvoid && maxPermittedFalling >= intersectedObstructions.size();
   }
 
   /**
@@ -652,16 +651,18 @@ public class PostLayoutCalculator {
         return Double.compare(options1.placedOnMustAvoid(), options2.placedOnMustAvoid());
       }
 
-      if (!Objects.equals(options1.placedOnTryToAvoid(), options2.placedOnMustAvoid())) {
+      if (!Objects.equals(options1.placedOnTryToAvoid(), options2.placedOnTryToAvoid())) {
         return Double.compare(options1.placedOnTryToAvoid(), options2.placedOnTryToAvoid());
       }
 
       if (!Objects.equals(options1.evenLayout(), options2.evenLayout())) {
         final var extraPostsDiff = options1.extraPosts() - options2.extraPosts();
 
-        return options1.evenLayout() && extraPostsDiff <= 1
-            ? -1
-            : 1;
+        // +2 extra posts are worse than even layout
+        final var firstOptionBetter = (options1.evenLayout() && extraPostsDiff <= 1)
+            || (options2.evenLayout() && extraPostsDiff < -1);
+
+        return firstOptionBetter ? -1 : 1;
       }
 
       if (!Objects.equals(options1.extraPosts(), options2.extraPosts())) {
