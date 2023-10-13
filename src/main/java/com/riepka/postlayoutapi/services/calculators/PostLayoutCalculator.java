@@ -379,6 +379,18 @@ public class PostLayoutCalculator {
     return (obstruction.size() + postSize) / 2;
   }
 
+  /**
+   * Finds solution(if exist) with post placed in fixed position inside segment.
+   * Segment is divided into two separate parts and each part filled with even panels.
+   * If there are no critical intersections with obstructions then solution (covered by Optional) returned,
+   * otherwise Optional empty returned
+   *
+   * @param segmentLength       given segment length
+   * @param fixedPostLocation   post location inside segment
+   * @param segmentObstructions obstructions present in segment (all locations should be related to segment 0)
+   * @param initPostsNumb       number of posts for initial layout(even panels, no extra posts)
+   * @return solution if it exists, otherwise empty
+   */
   private Optional<SegmentSolution> findSolutionForLayoutWithFixedPostAndEvenPanels(
       double segmentLength,
       double fixedPostLocation,
@@ -402,6 +414,12 @@ public class PostLayoutCalculator {
     return Optional.empty();
   }
 
+  /**
+   * Checks if only <=10% post falls on “Try avoid” obstruction
+   * @param intersectedObstructions obstructions intersected with posts in layout
+   * @param postsNumber posts number in layout
+   * @return true if checking passed
+   */
   private boolean checkIfOnly10PcFallsOnTryAvoid(Collection<Obstruction> intersectedObstructions, int postsNumber) {
     if (intersectedObstructions.isEmpty()) {
       return true;
@@ -416,6 +434,12 @@ public class PostLayoutCalculator {
         && maxPermittedFalling <= intersectedObstructions.size();
   }
 
+  /**
+   * Creates layout with fixed post location inside segment
+   * @param segmentLength segment length
+   * @param fixedPostLocation location inside segment length
+   * @return layout fixed post and even left/right layout
+   */
   private List<Double> getLayoutWithFixedPost(double segmentLength, double fixedPostLocation) {
     final List<Double> layout = new ArrayList<>();
     final var leftLayout = getPostsEvenLayout(fixedPostLocation, 0);
@@ -430,6 +454,12 @@ public class PostLayoutCalculator {
     return layout;
   }
 
+  /**
+   * Creates even layout for given segment length
+   * @param segmentLength segment length
+   * @param extraPosts number of extra posts to add in default layout(based on panel max length)
+   * @return posts even layout
+   */
   private List<Double> getPostsEvenLayout(double segmentLength, int extraPosts) {
     final double maxCenterToCenter = panelMaxLength + postSize;
     final List<Double> baseLayout = new ArrayList<>();
@@ -448,6 +478,13 @@ public class PostLayoutCalculator {
     return baseLayout;
   }
 
+  /**
+   * Finds obstructions that are located in given range.
+   * @param redPostLocation segment red post location (absolute coordinate)
+   * @param greenPostLocation segment green post location (absolute coordinate)
+   * @return list of obstructions located in provided range.
+   * Obstruction's locations related to red post location (has related coordinate)
+   */
   private List<Obstruction> findSegmentObstructions(double redPostLocation, double greenPostLocation) {
     return obstructions.stream()
         .filter(obstruction -> {
@@ -464,18 +501,30 @@ public class PostLayoutCalculator {
         .toList();
   }
 
+  /**
+   * Finds all obstruction-location pairs for given layout and obstructions
+   * @param layout posts layout
+   * @param segmentObstructions list of obstructions related to given layout
+   * @return list of locations with intersected obstructions
+   */
   private List<PostLocationObstructionPair> findObstructionByPostLocation(
       List<Double> layout,
-      List<Obstruction> obstructions
+      List<Obstruction> segmentObstructions
   ) {
     return layout.stream()
-        .map(location -> findIntersectedObstruction(location, obstructions)// if found use it else set null
+        .map(location -> findIntersectedObstruction(location, segmentObstructions)// if found use it else set null
             .map(obstruction -> new PostLocationObstructionPair(location, obstruction))
             .orElse(null))
         .filter(Objects::nonNull)
         .toList();
   }
 
+  /**
+   * Finds intersected obstructions for given layout
+   * @param layout posts layout
+   * @param segmentObstructions list of obstructions related to given layout
+   * @return list of intersected obstructions
+   */
   private List<Obstruction> findIntersectedObstructions(List<Double> layout, List<Obstruction> segmentObstructions) {
     return layout.stream()
         .map(location -> findIntersectedObstruction(location, segmentObstructions))
@@ -483,6 +532,13 @@ public class PostLayoutCalculator {
         .toList();
   }
 
+  /**
+   * Tries to find intersected obstruction for given post location.
+   * If found returns this obstruction covered by Optional, otherwise - returns empty
+   * @param postLocation post location
+   * @param obstructions list of obstructions related to this post location
+   * @return obstruction if intersection exists, otherwise empty
+   */
   private Optional<Obstruction> findIntersectedObstruction(double postLocation, List<Obstruction> obstructions) {
     return obstructions.stream()
         .filter(obstruction -> {
@@ -495,6 +551,12 @@ public class PostLayoutCalculator {
         .findFirst(); // return covered first found or empty
   }
 
+  /**
+   * Mapper method. additionally add first and last post to segment and builds layout option
+   * @param solution solution for segment(all run considered as segment at this place)
+   * @return post layout option as projection of solution
+   * Where - PostLayoutOption(List<Double> postLocations)
+   */
   private PostLayoutOption mapSolutionToOption(SegmentSolution solution) {
     final List<Double> postLayout = new ArrayList<>();
     postLayout.add(0.0);
@@ -511,7 +573,7 @@ public class PostLayoutCalculator {
   private record SegmentResult(double location, List<SegmentSolution> solutions) {
   }
 
-  // solution for inner posts
+  // solution that holds segment inner posts layout with its creation options. locations are related to segment
   private record SegmentSolution(double segmentLength, List<Double> postLocations, SolutionOptions options) {
 
     public static SegmentSolution emptySolution(double segmentLength) {
