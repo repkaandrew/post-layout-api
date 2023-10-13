@@ -4,6 +4,7 @@ import static java.util.Collections.emptyList;
 
 import com.riepka.postlayoutapi.entity.Obstruction;
 import com.riepka.postlayoutapi.entity.ObstructionType;
+import com.riepka.postlayoutapi.entity.PostLayoutDescription;
 import com.riepka.postlayoutapi.entity.PostLayoutOption;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,6 +46,7 @@ public class PostLayoutCalculator {
     final var placePostObstructions = obstructions.stream()
         .filter(obstruction -> obstruction.type() == ObstructionType.PLACE_POST)
         .sorted(Comparator.comparingDouble(Obstruction::location))// can be omitted if all obstructions are sorted
+        .filter(obstruction -> obstruction.location() < runLength)
         .toList();
 
     final List<SegmentResult> segmentResultList = new ArrayList<>();
@@ -565,7 +567,17 @@ public class PostLayoutCalculator {
     postLayout.addAll(solution.postLocations());
     postLayout.add(runLength);
 
-    return new PostLayoutOption(postLayout);
+    final var options = solution.options();
+
+    return PostLayoutOption.builder()
+        .postLocations(postLayout)
+        .description(PostLayoutDescription.builder()
+            .evenLayout(options.evenLayout())
+            .additionalPosts(options.extraPosts())
+            .postsFallOnTryToAvoid(options.placedOnTryToAvoid())
+            .postsFallOnMustAvoid(options.placedOnMustAvoid())
+            .build())
+        .build();
   }
 
   /**
