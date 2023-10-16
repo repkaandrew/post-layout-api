@@ -151,7 +151,7 @@ public class PostLayoutCalculator {
       solutions.addAll(solutionsWithShifting);
     }
 
-    // Add base solution as is
+    // Add base solution as is. I think it shouldn't ever happen
     if (solutions.isEmpty()) {
       solutions.add(getSolutionForBaseLayout(baseLayout, intersectedObstructions, 0, segmentLength));
       solutions.add(getSolutionForBaseLayout(extraPostLayout, intersectedObstructionsWithExtraPost, 1, segmentLength));
@@ -658,7 +658,7 @@ public class PostLayoutCalculator {
       if (!Objects.equals(options1.evenLayout(), options2.evenLayout())) {
         final var extraPostsDiff = options1.extraPosts() - options2.extraPosts();
 
-        // +2 extra posts are worse than even layout
+        // +2 extra posts is worse than even layout
         final var firstOptionBetter = (options1.evenLayout() && extraPostsDiff <= 1)
             || (options2.evenLayout() && extraPostsDiff < -1);
 
@@ -673,13 +673,17 @@ public class PostLayoutCalculator {
     }
 
     private int compareByDeviation(SegmentSolution s1, SegmentSolution s2) {
-      return Double.compare(calcLayoutDeviation(s1), calcLayoutDeviation(s2));
+      return Double.compare(calcLayoutDispersion(s1), calcLayoutDispersion(s2));
     }
 
-    private double calcLayoutDeviation(SegmentSolution solution) {
+    private double calcLayoutDispersion(SegmentSolution solution) {
       final List<Double> centerToCenterLength = new ArrayList<>();
       final var layout = solution.postLocations();
       final var segmentLength = solution.segmentLength();
+
+      if (layout.isEmpty()) {
+        return 0;
+      }
 
       for (int i = 0; i <= layout.size(); i++) {
         final var prevLocation = i == 0
@@ -695,11 +699,11 @@ public class PostLayoutCalculator {
 
       final double average = segmentLength / (layout.size() + 1);
 
-      final var deviation = centerToCenterLength.stream()
+      final var deviationSum = centerToCenterLength.stream()
           .mapToDouble(c2c -> Math.pow(c2c - average, 2))
           .sum();
 
-      return Math.sqrt(deviation);
+      return Math.sqrt(deviationSum / layout.size());
     }
   }
 }

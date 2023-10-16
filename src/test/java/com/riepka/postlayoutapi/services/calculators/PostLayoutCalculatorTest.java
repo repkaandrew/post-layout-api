@@ -14,6 +14,7 @@ class PostLayoutCalculatorTest {
 
   private static final double POST_SIZE = 4;
   private static final double PANEL_MAX_LENGTH = 96.0;
+
   private PostLayoutCalculator calculator;
 
   private void init(double runLength, List<Obstruction> obstructions) {
@@ -144,7 +145,7 @@ class PostLayoutCalculatorTest {
   }
 
   @Test
-  void shouldCalculateCorrectlyWithMultipleSections() {
+  void shouldCombineResultsCorrectly() {
     // given
     final var runLength = 540;
     init(
@@ -160,11 +161,16 @@ class PostLayoutCalculatorTest {
     final var actual = calculator.calculate();
     // then
     assertThat(actual).isEqualTo(List.of(
-        option(List.of(0.0, 67.5, 135.0, 202.5, 270.0), true, 1, 0, 0),
-        option(List.of(0.0, 86.0, 176.0, 270.0), false, 0, 0, 0),
-        option(List.of(0.0, 94.0, 184.0, 270.0), false, 0, 0, 0),
-        option(List.of(0.0, 86.0, 184.0, 270.0), false, 0, 0, 0),
-        option(List.of(0.0, 94.0, 176.0, 270.0), false, 0, 0, 0)
+        option(List.of(0.0, 67.5, 135.0, 202.5, 270.0, 337.5, 405.0, 472.5, 540.0), true, 2, 0, 0),
+        option(List.of(0.0, 67.5, 135.0, 202.5, 270.0, 356.0, 446.0, 540.0), false, 1, 0, 0),
+        option(List.of(0.0, 67.5, 135.0, 202.5, 270.0, 364.0, 454.0, 540.0), false, 1, 0, 0),
+        option(List.of(0.0, 67.5, 135.0, 202.5, 270.0, 356.0, 454.0, 540.0), false, 1, 0, 0),
+        option(List.of(0.0, 67.5, 135.0, 202.5, 270.0, 364.0, 446.0, 540.0), false, 1, 0, 0),
+        option(List.of(0.0, 86.0, 178.0, 270.0, 356.0, 446.0, 540.0), false, 0, 1, 0),
+        option(List.of(0.0, 86.0, 178.0, 270.0, 364.0, 454.0, 540.0), false, 0, 1, 0),
+        option(List.of(0.0, 94.0, 182.0, 270.0, 356.0, 446.0, 540.0), false, 0, 1, 0),
+        option(List.of(0.0, 94.0, 182.0, 270.0, 364.0, 454.0, 540.0), false, 0, 1, 0),
+        option(List.of(0.0, 88.0, 176.0, 270.0, 356.0, 446.0, 540.0), false, 0, 1, 0)
     ));
   }
 
@@ -177,9 +183,36 @@ class PostLayoutCalculatorTest {
     final var actual = calculator.calculate();
     // then
     assertThat(actual).isEqualTo(List.of(
-        option(List.of(0.0, 67.5, 135.0, 202.5, 270.0, 337.5, 405.0, 472.5), true, 2, 0, 0),
+        option(List.of(0.0, 67.5, 135.0, 202.5, 270.0), true, 1, 0, 0),
         option(List.of(0.0, 86.0, 178.0, 270.0), false, 0, 0, 0),
         option(List.of(0.0, 94.0, 182.0, 270.0), false, 0, 0, 0)
+    ));
+  }
+
+  @Test
+  void shouldCalculateCorrectlyIfSolutionExistOnlyForExtraPostLayout() {
+    // given
+    final var runLength = 300;
+    init(
+        runLength,
+        List.of(
+            mustAvoid(4, 100),
+            mustAvoid(4, 200),
+            mustAvoid(4, 75),
+            mustAvoid(4, 150)
+        )
+    );
+    // when
+    final var actual = calculator.calculate();
+    // then
+    assertThat(actual).isEqualTo(List.of(
+        option(List.of(0.0, 71.0, 146.0, 225.0, 300.0), false, 1, 0, 0),
+        option(List.of(0.0, 79.0, 154.0, 225.0, 300.0), false, 1, 0, 0),
+        option(List.of(0.0, 71.0, 154.0, 225.0, 300.0), false, 1, 0, 0),
+        option(List.of(0.0, 79.0, 146.0, 225.0, 300.0), false, 1, 0, 0),
+        option(List.of(0.0, 96.0, 164.0, 232.0, 300.0), false, 1, 0, 0),
+        option(List.of(0.0, 68.0, 136.0, 204.0, 300.0), false, 1, 0, 0)
+
     ));
   }
 
