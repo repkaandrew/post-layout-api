@@ -1,11 +1,11 @@
-package com.riepka.postlayoutapi.services.calculators;
+package com.fencegenius.postlayoutapi.services.calculators;
 
 import static java.util.Collections.emptyList;
 
-import com.riepka.postlayoutapi.entity.Obstruction;
-import com.riepka.postlayoutapi.entity.ObstructionType;
-import com.riepka.postlayoutapi.entity.PostLayoutDescription;
-import com.riepka.postlayoutapi.entity.PostLayoutOption;
+import com.fencegenius.postlayoutapi.entity.Obstruction;
+import com.fencegenius.postlayoutapi.entity.ObstructionType;
+import com.fencegenius.postlayoutapi.entity.PostLayoutDescription;
+import com.fencegenius.postlayoutapi.entity.PostLayoutOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;

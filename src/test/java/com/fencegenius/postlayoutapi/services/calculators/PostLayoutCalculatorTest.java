@@ -1,13 +1,14 @@
-package com.riepka.postlayoutapi.services.calculators;
+package com.fencegenius.postlayoutapi.services.calculators;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.riepka.postlayoutapi.entity.Obstruction;
-import com.riepka.postlayoutapi.entity.ObstructionType;
-import com.riepka.postlayoutapi.entity.PostLayoutDescription;
-import com.riepka.postlayoutapi.entity.PostLayoutOption;
+import com.fencegenius.postlayoutapi.entity.Obstruction;
+import com.fencegenius.postlayoutapi.entity.ObstructionType;
+import com.fencegenius.postlayoutapi.entity.PostLayoutDescription;
+import com.fencegenius.postlayoutapi.entity.PostLayoutOption;
 import java.util.List;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class PostLayoutCalculatorTest {
@@ -62,7 +63,7 @@ class PostLayoutCalculatorTest {
     // when
     final var actual = calculator.calculate();
     // then
-    assertThat(actual).isEqualTo(List.of(
+    Assertions.assertThat(actual).isEqualTo(List.of(
         option(List.of(0.0, 90.0, 180.0, 270.0), true, 0, 1, 0)
     ));
   }
@@ -75,7 +76,7 @@ class PostLayoutCalculatorTest {
     // when
     final var actual = calculator.calculate();
     // then
-    assertThat(actual).isEqualTo(List.of(
+    Assertions.assertThat(actual).isEqualTo(List.of(
         option(List.of(0.0, 67.5, 135.0, 202.5, 270.0), true, 1, 0, 0),
         option(List.of(0.0, 94.0, 182.0, 270.0), false, 0, 0, 0),
         option(List.of(0.0, 91.2, 182.4, 270.0), false, 0, 1, 0),
@@ -92,7 +93,7 @@ class PostLayoutCalculatorTest {
     // when
     final var actual = calculator.calculate();
     // then
-    assertThat(actual).isEqualTo(List.of(
+    Assertions.assertThat(actual).isEqualTo(List.of(
         option(List.of(0.0, 72.0, 144.0, 216.0, 288.0, 360.0), true, 1, 0, 0)
     ));
   }
@@ -105,7 +106,7 @@ class PostLayoutCalculatorTest {
     // when
     final var actual = calculator.calculate();
     // then
-    assertThat(actual).isEqualTo(List.of(
+    Assertions.assertThat(actual).isEqualTo(List.of(
         option(List.of(0.0, 67.5, 135.0, 202.5, 270.0), true, 1, 0, 0),
         option(List.of(0.0, 94.0, 182.0, 270.0), false, 0, 0, 0),
         option(List.of(0.0, 91.2, 182.4, 270.0), false, 0, 1, 0),
@@ -121,7 +122,7 @@ class PostLayoutCalculatorTest {
     // when
     final var actual = calculator.calculate();
     // then
-    assertThat(actual).isEqualTo(List.of(
+    Assertions.assertThat(actual).isEqualTo(List.of(
         option(List.of(0.0, 67.5, 135.0, 202.5, 270.0), true, 1, 0, 0),
         option(List.of(0.0, 94.0, 182.0, 270.0), false, 0, 0, 0)
     ));
@@ -135,7 +136,7 @@ class PostLayoutCalculatorTest {
     // when
     final var actual = calculator.calculate();
     // then
-    assertThat(actual).isEqualTo(List.of(
+    Assertions.assertThat(actual).isEqualTo(List.of(
         option(List.of(0.0, 67.5, 135.0, 202.5, 270.0), true, 1, 0, 0),
         option(List.of(0.0, 86.0, 176.0, 270.0), false, 0, 0, 0),
         option(List.of(0.0, 94.0, 184.0, 270.0), false, 0, 0, 0),
@@ -160,7 +161,7 @@ class PostLayoutCalculatorTest {
     // when
     final var actual = calculator.calculate();
     // then
-    assertThat(actual).isEqualTo(List.of(
+    Assertions.assertThat(actual).isEqualTo(List.of(
         option(List.of(0.0, 67.5, 135.0, 202.5, 270.0, 337.5, 405.0, 472.5, 540.0), true, 2, 0, 0),
         option(List.of(0.0, 67.5, 135.0, 202.5, 270.0, 356.0, 446.0, 540.0), false, 1, 0, 0),
         option(List.of(0.0, 67.5, 135.0, 202.5, 270.0, 364.0, 454.0, 540.0), false, 1, 0, 0),
@@ -182,7 +183,7 @@ class PostLayoutCalculatorTest {
     // when
     final var actual = calculator.calculate();
     // then
-    assertThat(actual).isEqualTo(List.of(
+    Assertions.assertThat(actual).isEqualTo(List.of(
         option(List.of(0.0, 67.5, 135.0, 202.5, 270.0), true, 1, 0, 0),
         option(List.of(0.0, 86.0, 178.0, 270.0), false, 0, 0, 0),
         option(List.of(0.0, 94.0, 182.0, 270.0), false, 0, 0, 0)
@@ -205,7 +206,7 @@ class PostLayoutCalculatorTest {
     // when
     final var actual = calculator.calculate();
     // then
-    assertThat(actual).isEqualTo(List.of(
+    Assertions.assertThat(actual).isEqualTo(List.of(
         option(List.of(0.0, 71.0, 146.0, 225.0, 300.0), false, 1, 0, 0),
         option(List.of(0.0, 79.0, 154.0, 225.0, 300.0), false, 1, 0, 0),
         option(List.of(0.0, 71.0, 154.0, 225.0, 300.0), false, 1, 0, 0),

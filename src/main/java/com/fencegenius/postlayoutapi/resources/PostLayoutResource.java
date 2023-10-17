@@ -1,8 +1,8 @@
-package com.riepka.postlayoutapi.resources;
+package com.fencegenius.postlayoutapi.resources;
 
-import com.riepka.postlayoutapi.entity.LayoutCalculationInput;
-import com.riepka.postlayoutapi.entity.PostLayoutOption;
-import com.riepka.postlayoutapi.services.PostLayoutService;
+import com.fencegenius.postlayoutapi.entity.LayoutCalculationInput;
+import com.fencegenius.postlayoutapi.entity.PostLayoutOption;
+import com.fencegenius.postlayoutapi.services.PostLayoutService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

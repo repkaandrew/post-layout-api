@@ -1,4 +1,4 @@
-package com.riepka.postlayoutapi.entity;
+package com.fencegenius.postlayoutapi.entity;
 
 public enum ObstructionType {
   MUST_AVOID,
