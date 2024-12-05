@@ -1,9 +1,9 @@
-package com.riepka.postlayoutapi.mapper;
+package com.fencegenius.postlayoutapi.mapper;
 
-import com.riepka.postlayoutapi.entity.CalculationData;
-import com.riepka.postlayoutapi.entity.LayoutCalculationInput;
-import com.riepka.postlayoutapi.entity.Obstruction;
-import com.riepka.postlayoutapi.entity.ObstructionInput;
+import com.fencegenius.postlayoutapi.entity.CalculationData;
+import com.fencegenius.postlayoutapi.entity.LayoutCalculationInput;
+import com.fencegenius.postlayoutapi.entity.Obstruction;
+import com.fencegenius.postlayoutapi.entity.ObstructionInput;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 

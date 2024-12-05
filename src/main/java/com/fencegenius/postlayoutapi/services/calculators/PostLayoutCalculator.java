@@ -1,10 +1,11 @@
-package com.riepka.postlayoutapi.services.calculators;
+package com.fencegenius.postlayoutapi.services.calculators;
 
 import static java.util.Collections.emptyList;
 
-import com.riepka.postlayoutapi.entity.Obstruction;
-import com.riepka.postlayoutapi.entity.ObstructionType;
-import com.riepka.postlayoutapi.entity.PostLayoutOption;
+import com.fencegenius.postlayoutapi.entity.Obstruction;
+import com.fencegenius.postlayoutapi.entity.ObstructionType;
+import com.fencegenius.postlayoutapi.entity.PostLayoutDescription;
+import com.fencegenius.postlayoutapi.entity.PostLayoutOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -16,6 +17,7 @@ public class PostLayoutCalculator {
 
   private static final double MAX_ALLOWED_INTERSECTION = 0.1;
   private static final int SOLUTIONS_DESIRED = 10;
+  private static final int POST_INSTALLATION_EXTENSION = 4;
 
   // post style size
   private final double postSize;
@@ -39,12 +41,13 @@ public class PostLayoutCalculator {
   }
 
   /**
-   * @return list of found layout options PostLayoutOption(posts)
+   * @return list of found layout prioritized options
    */
   public List<PostLayoutOption> calculate() {
     final var placePostObstructions = obstructions.stream()
         .filter(obstruction -> obstruction.type() == ObstructionType.PLACE_POST)
         .sorted(Comparator.comparingDouble(Obstruction::location))// can be omitted if all obstructions are sorted
+        .filter(obstruction -> obstruction.location() < runLength)
         .toList();
 
     final List<SegmentResult> segmentResultList = new ArrayList<>();
@@ -104,41 +107,16 @@ public class PostLayoutCalculator {
     final List<SegmentSolution> solutions = new ArrayList<>();
 
     final List<Double> baseLayout = getPostsEvenLayout(segmentLength, 0);
-    final var numberOfBasePosts = baseLayout.size();
-
-    // base case (there are no inner posts)
-    if (numberOfBasePosts == 0) {
-      solutions.add(SegmentSolution.emptySolution(segmentLength));
-
-      return solutions;
-    }
-
-    final List<Obstruction> intersectedObstructions = findIntersectedObstructions(baseLayout, segmentObstructions);
-
-    // Check If only <=10% post falls on “Try to avoid” obstruction for base layout
-    if (checkIfOnly10PcFallsOnTryAvoid(intersectedObstructions, numberOfBasePosts)) {
-      final var solution = new SegmentSolution(
-          segmentLength,
-          baseLayout,
-          new SolutionOptions(true, 0, intersectedObstructions.size(), 0)
-      );
-      solutions.add(solution);
-
-      // best solution, just return it
-      return solutions;
-    }
-
-    // Check If only <=10% post falls on “Try to avoid” obstruction for extra post layout
     final List<Double> extraPostLayout = getPostsEvenLayout(segmentLength, 1);
-    final List<Obstruction> intersectedObstructionsWithExtraPost =
-        findIntersectedObstructions(extraPostLayout, segmentObstructions);
-    if (checkIfOnly10PcFallsOnTryAvoid(intersectedObstructionsWithExtraPost, extraPostLayout.size())) {
-      final var solution = new SegmentSolution(
-          segmentLength,
-          extraPostLayout,
-          new SolutionOptions(true, 1, intersectedObstructionsWithExtraPost.size(), 0)
-      );
-      solutions.add(solution);
+
+    final int numberOfBasePosts = baseLayout.size();
+
+    // Find solutions with even base and +1 post layouts
+    for (final List<Double> layout : List.of(baseLayout, extraPostLayout)) {
+      final Optional<SegmentSolution> evenLayoutSolutionOpt =
+          findSolutionWithEvenLayout(segmentLength, layout, segmentObstructions, numberOfBasePosts);
+
+      evenLayoutSolutionOpt.ifPresent(solutions::add);
     }
 
     // Find solutions with posts shifting for base and +1 post layouts
@@ -149,13 +127,53 @@ public class PostLayoutCalculator {
       solutions.addAll(solutionsWithShifting);
     }
 
-    // Add base solution as is
+    // Add base solution as is. I think it shouldn't ever happen
     if (solutions.isEmpty()) {
+      final var intersectedObstructions = findIntersectedObstructions(baseLayout, segmentObstructions);
+      final var intersectedObstructionsExtraPost = findIntersectedObstructions(extraPostLayout, segmentObstructions);
+
       solutions.add(getSolutionForBaseLayout(baseLayout, intersectedObstructions, 0, segmentLength));
-      solutions.add(getSolutionForBaseLayout(extraPostLayout, intersectedObstructionsWithExtraPost, 1, segmentLength));
+      solutions.add(getSolutionForBaseLayout(extraPostLayout, intersectedObstructionsExtraPost, 1, segmentLength));
     }
 
     return solutions;
+  }
+
+  /**
+   * Finds valid solution (if exist) for panels even layout (equal distances between panels).
+   *
+   * @param segmentLength       segment red post center to green post center length
+   * @param evenLayout          layout for which solutions should be found
+   * @param segmentObstructions obstructions in segment (with locations related to 0 (segment start point))
+   * @param initPostsNumb       posts number for initial layout(even panels, no extra posts)
+   * @return optional of available solution, empty if solution not found or invalid.
+   */
+  private Optional<SegmentSolution> findSolutionWithEvenLayout(
+      double segmentLength,
+      List<Double> evenLayout,
+      List<Obstruction> segmentObstructions,
+      int initPostsNumb
+  ) {
+    final var numberOrInnerPosts = evenLayout.size();
+
+    if (numberOrInnerPosts == 0) {
+      return Optional.of(SegmentSolution.emptySolution(segmentLength));
+    }
+
+    final List<Obstruction> intersectedObstructions = findIntersectedObstructions(evenLayout, segmentObstructions);
+
+    // Check If only <=10% post falls on “Try to avoid” obstruction
+    if (checkIfOnly10PcFallsOnTryAvoid(intersectedObstructions, numberOrInnerPosts)) {
+      final var numberOfExtraPosts = numberOrInnerPosts - initPostsNumb;
+      final var solution = new SegmentSolution(
+          segmentLength,
+          evenLayout,
+          new SolutionOptions(true, numberOfExtraPosts, intersectedObstructions.size(), 0)
+      );
+      return Optional.of(solution);
+    }
+
+    return Optional.empty();
   }
 
   /**
@@ -187,7 +205,7 @@ public class PostLayoutCalculator {
    * without changing locations for all other posts (including fell on "Try to avoid")
    *
    * @param segmentLength       segment red post center to green post center length
-   * @param baseLayout          base layout for which solutions be found
+   * @param baseLayout          base layout for which solutions should be found
    * @param segmentObstructions obstructions in segment (with locations related to 0 (segment start point))
    * @param initPostsNumb       posts number for initial layout(even panels, no extra posts)
    * @return list of available solutions (can be empty)
@@ -222,7 +240,7 @@ public class PostLayoutCalculator {
           initPostsNumb
       );
 
-      leftSideSolutionOpt.ifPresent(solutions::add);
+      leftSideSolutionOpt.ifPresent(solutions::add);// add to solution if result present
       rightSideSolutionOpt.ifPresent(solutions::add);
     }
 
@@ -353,6 +371,8 @@ public class PostLayoutCalculator {
    * @return layout validity
    */
   private boolean checkIfLayoutPanelsHaveValidLength(List<Double> layout, double sectionLength) {
+    final double maxCenterToCenter = panelMaxLength + postSize;
+
     for (int i = 0; i < layout.size() + 1; i++) {
       final double prevLocation = i == 0
           ? 0
@@ -361,9 +381,9 @@ public class PostLayoutCalculator {
           ? sectionLength
           : layout.get(i);
 
-      final double panelLength = currLocation - prevLocation;
+      final double postCenterToCenter = currLocation - prevLocation;
 
-      if (panelLength > panelMaxLength) {
+      if (postCenterToCenter > maxCenterToCenter) {
         return false;
       }
     }
@@ -376,9 +396,28 @@ public class PostLayoutCalculator {
    * @return calculated offset
    */
   private double calcObstructionOffset(Obstruction obstruction) {
-    return (obstruction.size() + postSize) / 2;
+    return (obstruction.size() + getPostInstallationSize()) / 2;
   }
 
+  /**
+   * Gets post installation size including installation extension.
+   */
+  private double getPostInstallationSize() {
+    return postSize + POST_INSTALLATION_EXTENSION;
+  }
+
+  /**
+   * Finds solution(if exist) with post placed in fixed position inside segment.
+   * Segment is divided into two separate parts and each part filled with even panels.
+   * If there are no critical intersections with obstructions then solution (covered by Optional) returned,
+   * otherwise Optional empty returned
+   *
+   * @param segmentLength       given segment length
+   * @param fixedPostLocation   post location inside segment
+   * @param segmentObstructions obstructions present in segment (all locations should be related to segment 0)
+   * @param initPostsNumb       number of posts for initial layout(even panels, no extra posts)
+   * @return solution if it exists, otherwise empty
+   */
   private Optional<SegmentSolution> findSolutionForLayoutWithFixedPostAndEvenPanels(
       double segmentLength,
       double fixedPostLocation,
@@ -402,6 +441,12 @@ public class PostLayoutCalculator {
     return Optional.empty();
   }
 
+  /**
+   * Checks if only <=10% post falls on “Try to avoid” obstruction
+   * @param intersectedObstructions obstructions intersected with posts in layout
+   * @param postsNumber posts number in layout
+   * @return true if checking passed
+   */
   private boolean checkIfOnly10PcFallsOnTryAvoid(Collection<Obstruction> intersectedObstructions, int postsNumber) {
     if (intersectedObstructions.isEmpty()) {
       return true;
@@ -410,12 +455,18 @@ public class PostLayoutCalculator {
     final var onlyTryToAvoid = intersectedObstructions.stream()
         .noneMatch(obstruction -> obstruction.type() == ObstructionType.MUST_AVOID);
 
+    // 1-10 1, 10-20 2, ...
     final int maxPermittedFalling = (int) Math.ceil((double) postsNumber / 10);
 
-    return onlyTryToAvoid
-        && maxPermittedFalling <= intersectedObstructions.size();
+    return onlyTryToAvoid && maxPermittedFalling >= intersectedObstructions.size();
   }
 
+  /**
+   * Creates layout with fixed post location inside segment
+   * @param segmentLength segment length
+   * @param fixedPostLocation location inside segment length
+   * @return layout fixed post and even left/right layout
+   */
   private List<Double> getLayoutWithFixedPost(double segmentLength, double fixedPostLocation) {
     final List<Double> layout = new ArrayList<>();
     final var leftLayout = getPostsEvenLayout(fixedPostLocation, 0);
@@ -430,24 +481,33 @@ public class PostLayoutCalculator {
     return layout;
   }
 
+  /**
+   * Creates even layout for given segment length (only inner posts included)
+   * @param segmentLength segment length
+   * @param extraPosts number of extra posts to add in default layout(based on panel max length)
+   * @return posts even layout
+   */
   private List<Double> getPostsEvenLayout(double segmentLength, int extraPosts) {
     final double maxCenterToCenter = panelMaxLength + postSize;
-    final List<Double> baseLayout = new ArrayList<>();
-
-    if (segmentLength <= maxCenterToCenter) {
-      return baseLayout;
-    }
-
-    final int numberOfInnerPosts = (int) (segmentLength / maxCenterToCenter) + extraPosts;
+    final int numberOfInnerPosts = (int) (Math.ceil(segmentLength / maxCenterToCenter)) + extraPosts - 1;
     final double defaultCenterToCenter = segmentLength / (numberOfInnerPosts + 1);
 
+    final List<Double> layout = new ArrayList<>();
+
     for (int i = 0; i < numberOfInnerPosts; i++) {
-      baseLayout.add((i + 1) * defaultCenterToCenter);
+      layout.add((i + 1) * defaultCenterToCenter);
     }
 
-    return baseLayout;
+    return layout;
   }
 
+  /**
+   * Finds obstructions that are located in given range.
+   * @param redPostLocation segment red post location (absolute coordinate)
+   * @param greenPostLocation segment green post location (absolute coordinate)
+   * @return list of obstructions located in provided range.
+   * Obstruction's locations related to red post location (has related coordinate)
+   */
   private List<Obstruction> findSegmentObstructions(double redPostLocation, double greenPostLocation) {
     return obstructions.stream()
         .filter(obstruction -> {
@@ -464,18 +524,30 @@ public class PostLayoutCalculator {
         .toList();
   }
 
+  /**
+   * Finds all obstruction-location pairs for given layout and obstructions
+   * @param layout posts layout
+   * @param segmentObstructions list of obstructions related to given layout
+   * @return list of locations with intersected obstructions
+   */
   private List<PostLocationObstructionPair> findObstructionByPostLocation(
       List<Double> layout,
-      List<Obstruction> obstructions
+      List<Obstruction> segmentObstructions
   ) {
     return layout.stream()
-        .map(location -> findIntersectedObstruction(location, obstructions)// if found use it else set null
+        .map(location -> findIntersectedObstruction(location, segmentObstructions)// if found use it else set null
             .map(obstruction -> new PostLocationObstructionPair(location, obstruction))
             .orElse(null))
         .filter(Objects::nonNull)
         .toList();
   }
 
+  /**
+   * Finds intersected obstructions for given layout
+   * @param layout posts layout
+   * @param segmentObstructions list of obstructions related to given layout
+   * @return list of intersected obstructions
+   */
   private List<Obstruction> findIntersectedObstructions(List<Double> layout, List<Obstruction> segmentObstructions) {
     return layout.stream()
         .map(location -> findIntersectedObstruction(location, segmentObstructions))
@@ -483,25 +555,48 @@ public class PostLayoutCalculator {
         .toList();
   }
 
+  /**
+   * Tries to find intersected obstruction for given post location.
+   * If found returns this obstruction covered by Optional, otherwise - returns empty
+   * @param postLocation post location
+   * @param obstructions list of obstructions related to this post location
+   * @return obstruction if intersection exists, otherwise empty
+   */
   private Optional<Obstruction> findIntersectedObstruction(double postLocation, List<Obstruction> obstructions) {
     return obstructions.stream()
         .filter(obstruction -> {
           final var size = obstruction.size();
           final var location = obstruction.location();
-          final var zoneForIntersection = (0.5 - MAX_ALLOWED_INTERSECTION) * size + postSize / 2;
+          final var zoneForIntersection = (0.5 - MAX_ALLOWED_INTERSECTION) * size + getPostInstallationSize() / 2;
 
           return (postLocation > location - zoneForIntersection) && (postLocation < location + zoneForIntersection);
         })
-        .findFirst(); // return covered first found or empty
+        .findFirst(); // returns covered first found or empty
   }
 
+  /**
+   * Mapper method. additionally add first and last post to segment and builds layout option
+   * @param solution solution for segment(all run considered as segment at this place)
+   * @return post layout option as projection of solution
+   * Where - PostLayoutOption(List<Double> postLocations)
+   */
   private PostLayoutOption mapSolutionToOption(SegmentSolution solution) {
     final List<Double> postLayout = new ArrayList<>();
     postLayout.add(0.0);
     postLayout.addAll(solution.postLocations());
     postLayout.add(runLength);
 
-    return new PostLayoutOption(postLayout);
+    final var options = solution.options();
+
+    return PostLayoutOption.builder()
+        .postLocations(postLayout)
+        .description(PostLayoutDescription.builder()
+            .evenLayout(options.evenLayout())
+            .additionalPosts(options.extraPosts())
+            .postsFallOnTryToAvoid(options.placedOnTryToAvoid())
+            .postsFallOnMustAvoid(options.placedOnMustAvoid())
+            .build())
+        .build();
   }
 
   /**
@@ -511,7 +606,7 @@ public class PostLayoutCalculator {
   private record SegmentResult(double location, List<SegmentSolution> solutions) {
   }
 
-  // solution for inner posts
+  // solution that holds segment inner posts layout with its creation options. locations are related to segment
   private record SegmentSolution(double segmentLength, List<Double> postLocations, SolutionOptions options) {
 
     public static SegmentSolution emptySolution(double segmentLength) {
@@ -576,12 +671,18 @@ public class PostLayoutCalculator {
         return Double.compare(options1.placedOnMustAvoid(), options2.placedOnMustAvoid());
       }
 
-      if (!Objects.equals(options1.placedOnTryToAvoid(), options2.placedOnMustAvoid())) {
+      if (!Objects.equals(options1.placedOnTryToAvoid(), options2.placedOnTryToAvoid())) {
         return Double.compare(options1.placedOnTryToAvoid(), options2.placedOnTryToAvoid());
       }
 
       if (!Objects.equals(options1.evenLayout(), options2.evenLayout())) {
-        return options1.evenLayout() ? -1 : 1;
+        final var extraPostsDiff = options1.extraPosts() - options2.extraPosts();
+
+        // +2 extra posts is worse than even layout
+        final var firstOptionBetter = (options1.evenLayout() && extraPostsDiff <= 1)
+            || (options2.evenLayout() && extraPostsDiff < -1);
+
+        return firstOptionBetter ? -1 : 1;
       }
 
       if (!Objects.equals(options1.extraPosts(), options2.extraPosts())) {
@@ -592,13 +693,17 @@ public class PostLayoutCalculator {
     }
 
     private int compareByDeviation(SegmentSolution s1, SegmentSolution s2) {
-      return Double.compare(calcLayoutDeviation(s1), calcLayoutDeviation(s2));
+      return Double.compare(calcLayoutDispersion(s1), calcLayoutDispersion(s2));
     }
 
-    private double calcLayoutDeviation(SegmentSolution solution) {
+    private double calcLayoutDispersion(SegmentSolution solution) {
       final List<Double> centerToCenterLength = new ArrayList<>();
       final var layout = solution.postLocations();
       final var segmentLength = solution.segmentLength();
+
+      if (layout.isEmpty()) {
+        return 0;
+      }
 
       for (int i = 0; i <= layout.size(); i++) {
         final var prevLocation = i == 0
@@ -614,11 +719,11 @@ public class PostLayoutCalculator {
 
       final double average = segmentLength / (layout.size() + 1);
 
-      final var deviation = centerToCenterLength.stream()
+      final var deviationSum = centerToCenterLength.stream()
           .mapToDouble(c2c -> Math.pow(c2c - average, 2))
           .sum();
 
-      return Math.sqrt(deviation);
+      return Math.sqrt(deviationSum / layout.size());
     }
   }
 }

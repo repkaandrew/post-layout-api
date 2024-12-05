@@ -1,4 +1,4 @@
-package com.riepka.postlayoutapi.entity;
+package com.fencegenius.postlayoutapi.entity;
 
 import java.util.List;
 import lombok.Builder;

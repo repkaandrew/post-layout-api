@@ -1,9 +1,9 @@
-package com.riepka.postlayoutapi.services;
+package com.fencegenius.postlayoutapi.services;
 
-import com.riepka.postlayoutapi.entity.LayoutCalculationInput;
-import com.riepka.postlayoutapi.entity.PostLayoutOption;
-import com.riepka.postlayoutapi.mapper.CalculationDataMapper;
-import com.riepka.postlayoutapi.services.calculators.PostLayoutCalculator;
+import com.fencegenius.postlayoutapi.services.calculators.PostLayoutCalculator;
+import com.fencegenius.postlayoutapi.entity.LayoutCalculationInput;
+import com.fencegenius.postlayoutapi.entity.PostLayoutOption;
+import com.fencegenius.postlayoutapi.mapper.CalculationDataMapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

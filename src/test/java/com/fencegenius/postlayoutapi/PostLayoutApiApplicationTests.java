@@ -1,4 +1,4 @@
-package com.riepka.postlayoutapi;
+package com.fencegenius.postlayoutapi;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
