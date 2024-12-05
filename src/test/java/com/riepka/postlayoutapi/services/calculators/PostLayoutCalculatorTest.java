@@ -1,12 +1,12 @@
-package com.fencegenius.postlayoutapi.services.calculators;
+package com.riepka.postlayoutapi.services.calculators;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fencegenius.postlayoutapi.entity.Obstruction;
-import com.fencegenius.postlayoutapi.entity.ObstructionType;
-import com.fencegenius.postlayoutapi.entity.PostLayoutDescription;
-import com.fencegenius.postlayoutapi.entity.PostLayoutOption;
+import com.riepka.postlayoutapi.entity.Obstruction;
+import com.riepka.postlayoutapi.entity.ObstructionType;
+import com.riepka.postlayoutapi.entity.PostLayoutDescription;
+import com.riepka.postlayoutapi.entity.PostLayoutOption;
 import java.util.List;
 import org.assertj.core.util.DoubleComparator;
 import org.junit.jupiter.api.Test;
