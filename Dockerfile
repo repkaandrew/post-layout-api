@@ -1,9 +1,9 @@
-FROM gradle:jdk17-alpine AS build
-COPY --chown=gradle:gradle . /home/gradle/src
-WORKDIR /home/gradle/src
-RUN gradle build --no-daemon
+FROM gradle:jdk21-graal-jammy AS build
+COPY --chown=gradle:gradle . /home/src
+WORKDIR /home/src
+RUN gradle nativeCompile
 
-FROM openjdk:17-alpine
-COPY --from=build /home/gradle/src/build/libs/*SNAPSHOT.jar /app.jar
+FROM ubuntu:jammy
+COPY --from=build home/src/build/native/nativeCompile/post-layout-api api-native
 EXPOSE 8081
-ENTRYPOINT ["java","-jar","/app.jar"]
+ENTRYPOINT ["./api-native"]
