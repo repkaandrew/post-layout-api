@@ -1,4 +1,4 @@
-package com.fencegenius.postlayoutapi.entity;
+package com.riepka.postlayoutapi.entity;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
